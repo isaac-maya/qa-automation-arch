@@ -12,22 +12,6 @@ The architecture comprises the following key components:
 - **Robot Framework**: The primary tool for writing and executing test cases across API, backend, and UI layers.
 
 ### Workflow
-
-
-# QA Automation Architecture
-
-This repository showcases a robust QA Automation Architecture using Jenkins, Ansible, Ubuntu, and Robot Framework. The setup is designed to automate the execution of API, backend, and UI tests within isolated environments, leveraging LXD containers for consistency and scalability.
-
-## Architecture
-
-The architecture comprises the following key components:
-
-- **Jenkins Controller**: Manages the overall automation pipeline, including scheduling, triggering, and monitoring test executions.
-- **Jenkins Agents**: These are LXD containers configured to run the test cases. Two agent types are configured: one for API tests and another for UI tests.
-- **Ansible**: Utilized for configuration management and automation of the Jenkins setup and LXD container provisioning.
-- **Robot Framework**: The primary tool for writing and executing test cases across API, backend, and UI layers.
-
-### Workflow
 1. **Jenkins Controller Setup**: Ansible playbook installs Jenkins, sets up required plugins, and configures the controller.
 2. **Jenkins Agent Setup**: Agents are configured in LXD containers to execute specific test types (API/UI) based on the Jenkins pipelines.
 3. **Test Execution**: Test cases are executed within the LXD containers, ensuring isolated and consistent test environments.
