@@ -1,0 +1,100 @@
+pipeline {
+    agent {
+        label 'UI' // Use the label assigned to the Jenkins agent
+    }
+    environment {
+        TEST_CONTAINER_NAME = "jenkins-test-container-${BUILD_NUMBER}"
+        TEST_IMAGE_NAME = "robot-framework-base-image"
+    }
+    stages {
+        stage('Create LXD Container') {
+            steps {
+                script {
+                    // Create a new LXD container with a unique name
+                    sh "lxc launch ${env.TEST_IMAGE_NAME} ${env.TEST_CONTAINER_NAME}"
+                }
+            }
+        }
+        stage('Prepare Container Environment') {
+            steps {
+                script {
+                    // Ensure the tests directory exists in the container
+                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- mkdir -p /home/testuser/tests"
+                }
+            }
+        }
+        stage('Verify Test Files on Agent') {
+            steps {
+                script {
+                    // Verify the test files are present on the Jenkins agent
+                    sh "ls -la /home/jenkins/tests"
+                }
+            }
+        }
+        stage('Copy Test Files') {
+            steps {
+                script {
+                    // Copy test files into the LXD container correctly
+                    sh "lxc file push -r /home/jenkins/tests/* ${env.TEST_CONTAINER_NAME}/home/testuser/tests/"
+                }
+            }
+        }
+        stage('List Files in Container Before Test') {
+            steps {
+                script {
+                    // List files in the container to verify the path
+                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- ls -la /home/testuser/tests"
+                }
+            }
+        }
+        stage('Run Robot Framework UI Tests') {
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        // Run Robot Framework tests inside the LXD container
+                        sh """
+                        lxc exec ${env.TEST_CONTAINER_NAME} -- su - testuser -c '
+                        source .venv/bin/activate &&
+                        xvfb-run --auto-servernum --server-args=\"-screen 0 1920x1080x24\" robot --outputdir ~/tests/output ~/tests/test_ui.robot
+                        '
+                        """
+                    }
+                }
+            }
+        }
+        stage('List Files in Container After Test') {
+            steps {
+                script {
+                    // List files in the container after the tests to verify the results path
+                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- ls -la /home/testuser/tests/output"
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                // Collect Test Results
+                sh "mkdir -p results/${BUILD_NUMBER}"
+                
+                // Copy test results from the LXD container to the host
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh "lxc file pull -r ${env.TEST_CONTAINER_NAME}/home/testuser/tests/output/. results/${BUILD_NUMBER}/"
+                }
+
+                // Archive Robot Framework test results
+                archiveArtifacts artifacts: "results/${BUILD_NUMBER}/*", allowEmptyArchive: true
+
+                // Publish Robot Framework results
+                robot outputPath: "results/${BUILD_NUMBER}", logFileName: "log.html", reportFileName: "report.html", outputFileName: "output.xml"
+
+                // Ensure the LXD container is stopped and deleted even if there was an error
+                sh "lxc stop ${env.TEST_CONTAINER_NAME} || true"
+                sh "lxc delete ${env.TEST_CONTAINER_NAME} || true"
+
+                // Clean up the workspace after the build
+                cleanWs()
+            }
+        }
+    }
+}

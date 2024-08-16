@@ -1,0 +1,60 @@
+- name: Install Jenkins as a controller on a remote Ubuntu machine
+  hosts: jenkins_controller
+  become: yes
+  tasks:
+    - name: Update package list
+      apt:
+        update_cache: yes
+
+    - name: Install Java and dependencies
+      apt:
+        name:
+          - openjdk-17-jre
+          - fontconfig
+          - gnupg
+        state: present
+
+    - name: Install LXD
+      community.general.snap:
+        name: lxd
+        state: present
+
+    - name: Initialize LXD
+      command: lxd init --auto
+
+    - name: Download Jenkins key
+      get_url:
+        url: https://pkg.jenkins.io/debian/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian binary/"
+        filename: "jenkins"
+
+    - name: Update package list after adding Jenkins repository
+      apt:
+        update_cache: yes
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Enable Jenkins service
+      systemd:
+        name: jenkins
+        enabled: yes
+        state: started
+
+    - name: Fetch initial Jenkins admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+
+    - name: Retrieve IP address of the machine
+      command: hostname -I
+      register: ip_address
+
+    - name: Display Jenkins initial admin password and IP address
+      debug:
+        msg: "Jenkins initial admin password: {{ jenkins_password.stdout }}\nJenkins server IP address: {{ ip_address.stdout }}"
