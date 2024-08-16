@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    stages {
+        stage('Create LXD Container') {
+            steps {
+                script {
+                    // Create a new LXD container
+                    sh 'lxc launch ubuntu:20.04 jenkins-test-container'
+                }
+            }
+        }
+        stage('Run Command in LXD Container') {
+            steps {
+                script {
+                    // Run a command inside the LXD container
+                    sh 'lxc exec jenkins-test-container -- uname -a'
+                }
+            }
+        }
+        stage('Stop and Delete LXD Container') {
+            steps {
+                script {
+                    // Stop and delete the LXD container
+                    sh 'lxc stop jenkins-test-container'
+                    sh 'lxc delete jenkins-test-container'
+                }
+            }
+        }
+    }
+}
+
