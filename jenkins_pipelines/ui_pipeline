@@ -55,7 +55,7 @@ pipeline {
                         sh """
                         lxc exec ${env.TEST_CONTAINER_NAME} -- su - testuser -c '
                         source .venv/bin/activate &&
-                        xvfb-run --auto-servernum --server-args=\"-screen 0 1920x1080x24\" robot --outputdir ~/tests/output ~/tests/test_ui.robot
+                        xvfb-run --auto-servernum --server-args=\"-screen 0 1920x1080x24\" robot --outputdir /root/tests /root/tests/test_ui.robot
                         '
                         """
                     }
