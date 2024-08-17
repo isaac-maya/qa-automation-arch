@@ -40,7 +40,7 @@
         apt-get update && 
         apt install -y python3 python3-venv python3-pip xvfb chromium-browser chromium-chromedriver wget unzip sudo"
         
-     - name: Create a new user 'testuser' without a password inside the container
+    - name: Create a new user 'testuser' without a password inside the container
       command: >
         lxc exec robot-framework-base -- bash -c "
         adduser --disabled-password --gecos '' testuser &&
