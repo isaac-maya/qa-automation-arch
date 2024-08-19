@@ -20,7 +20,7 @@ The architecture comprises the following key components:
 
 If you use the `tree` command to visualize the directory structure, it becomes easy to start to grasp the role of each file:
 
-\`\`\`
+```
 .
 ├── README.md
 ├── ansible_playbooks
@@ -42,13 +42,13 @@ If you use the `tree` command to visualize the directory structure, it becomes e
     └── test_ui.robot
 
 4 directories, 15 files
-\`\`\`
+```
 
 At the top level, you'll find the `README.md`, a `hosts.ini` file, and three setup shell scripts. These shell scripts are essentially Ansible commands saved for convenience, allowing you to easily build one Jenkins controller and two Jenkins agents. Running these scripts with `bash` initiates the Ansible playbooks:
 
-\`\`\`
+```
 ansible-playbook -vv -i hosts.ini ansible_playbooks/build_jenkins_controller.yml --ask-become-pass
-\`\`\`
+```
 
 By examining the Ansible commands, you can infer the purpose of each directory, particularly the `ansible_playbooks` directory, which contains the detailed instructions to build the Jenkins machines. The `hosts.ini` file specifies the IP addresses of the three Jenkins machines.
 
@@ -60,7 +60,7 @@ For example, when setting up the Jenkins controller, the Ansible playbook perfor
 
 Here’s an excerpt from the `build_jenkins_controller.yml` playbook:
 
-\`\`\`yaml
+```yaml
 - name: Install Jenkins as a controller on a remote Ubuntu machine
   hosts: jenkins_controller
   become: yes
@@ -118,7 +118,7 @@ Here’s an excerpt from the `build_jenkins_controller.yml` playbook:
       debug:
         msg: "Jenkins initial admin password: {{ jenkins_password.stdout }}
 Jenkins server IP address: {{ ip_address.stdout }}"
-\`\`\`
+```
 
 ### Setting Up Jenkins
 
@@ -133,22 +133,24 @@ Once the Jenkins controller is installed, you can configure it by installing nec
 This setup prepares your Jenkins controller to manage the automation pipelines effectively.
 
 ### 1. Clone the Repository
-\`\`\`bash
+```bash
 git clone https://github.com/isaac-maya/qa-automation-arch.git
 cd qa-automation-arch
-\`\`\`
+```
 
 ### 2. Setup Jenkins Controller
-\`\`\`bash
+```bash
 ansible-playbook -i hosts.ini ansible_playbooks/build_jenkins_controller.yml --ask-become-pass
-\`\`\`
+```
 
 ### 3. Setup Jenkins Agents
-\`\`\`bash
-# For API Agent
-ansible-playbook -i hosts.ini ansible_playbooks/build_jenkins_api_agent.yml --ask-become-pass
 
+# For API Agent
+```bash
+ansible-playbook -i hosts.ini ansible_playbooks/build_jenkins_api_agent.yml --ask-become-pass
+```
 # For UI Agent
+```bash
 ansible-playbook -i hosts.ini ansible_playbooks/build_jenkins_ui_agent.yml --ask-become-pass
-\`\`\`
+```
 
