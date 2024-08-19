@@ -39,6 +39,14 @@ pipeline {
                 }
             }
         }
+        stage('Change Ownership of Test Files') {
+            steps {
+                script {
+                    // Change ownership of the files and folders to testuser
+                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- chown -R testuser:testuser /home/testuser/tests"
+                }
+            }
+        }
         stage('List Files in Container Before Test') {
             steps {
                 script {
