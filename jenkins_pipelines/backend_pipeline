@@ -86,8 +86,8 @@ pipeline {
                 robot outputPath: "results/${BUILD_NUMBER}", logFileName: "log.html", reportFileName: "report.html", outputFileName: "output.xml"
 
                 // Ensure the LXD container is stopped and deleted even if there was an error
-                //sh "lxc stop ${env.TEST_CONTAINER_NAME} || true"
-                //sh "lxc delete ${env.TEST_CONTAINER_NAME} || true"
+                sh "lxc stop ${env.TEST_CONTAINER_NAME} || true"
+                sh "lxc delete ${env.TEST_CONTAINER_NAME} || true"
 
                 // Clean up the workspace after the build
                 cleanWs()
