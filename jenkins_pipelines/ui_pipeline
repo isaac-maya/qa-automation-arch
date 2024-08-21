@@ -63,7 +63,7 @@ pipeline {
                         sh """
                         lxc exec ${env.TEST_CONTAINER_NAME} -- su - testuser -c '
                         source .venv/bin/activate &&
-                        xvfb-run --auto-servernum --server-args=\"-screen 0 1920x1080x24\" robot --outputdir /home/testuser/tests /home/testuser/tests/test_ui.robot
+                        xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" robot --outputdir /home/testuser/tests /home/testuser/tests/test_ui.robot
                         '
                         """
                     }
@@ -74,7 +74,7 @@ pipeline {
             steps {
                 script {
                     // List files in the container after the tests to verify the results path
-                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- ls -la /home/testuser/tests/output"
+                    sh "lxc exec ${env.TEST_CONTAINER_NAME} -- ls -la /home/testuser/tests"
                 }
             }
         }
@@ -82,12 +82,15 @@ pipeline {
     post {
         always {
             script {
-                // Collect Test Results
-                sh "mkdir -p results/${BUILD_NUMBER}"
+                // Ensure the results directory is clean before pulling results
+                sh "rm -rf results/${BUILD_NUMBER} && mkdir -p results/${BUILD_NUMBER}"
                 
                 // Copy test results from the LXD container to the host
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh "lxc file pull -r ${env.TEST_CONTAINER_NAME}/home/testuser/tests/output/. results/${BUILD_NUMBER}/"
+                    sh "lxc file pull ${env.TEST_CONTAINER_NAME}/home/testuser/tests/output.xml results/${BUILD_NUMBER}/output.xml"
+                    sh "lxc file pull ${env.TEST_CONTAINER_NAME}/home/testuser/tests/report.html results/${BUILD_NUMBER}/report.html"
+                    sh "lxc file pull ${env.TEST_CONTAINER_NAME}/home/testuser/tests/log.html results/${BUILD_NUMBER}/log.html"
+                    sh "lxc file pull -r ${env.TEST_CONTAINER_NAME}/home/testuser/tests/*.png results/${BUILD_NUMBER}/" // Pull screenshots
                 }
 
                 // Archive Robot Framework test results
